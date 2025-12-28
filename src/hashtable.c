@@ -18,7 +18,7 @@ hashtable_t *ht_create(size_t size)
     hashtable_t *ht;
     size_t i;
 
-    ht = (hashtable_t *)malloc(sizeof(hashtable_t) + sizeof(entry_t) * size);
+    ht = (hashtable_t *)malloc(sizeof(hashtable_t) + sizeof(entry_t *) * size);
     if (ht == NULL)
         return NULL;
 
@@ -30,7 +30,7 @@ hashtable_t *ht_create(size_t size)
     return ht;
 }
 
-int ht_set(hashtable_t *ht, char *key, void *value)
+int ht_set(hashtable_t *ht, const char *key, char *value)
 {
     unsigned long hash;
     int index;
@@ -45,6 +45,7 @@ int ht_set(hashtable_t *ht, char *key, void *value)
     {
         if (strcmp(curr->key, key) == 0)
         {
+            free(curr->value);
             curr->value = value;
             return 0;
         }
@@ -68,7 +69,7 @@ int ht_set(hashtable_t *ht, char *key, void *value)
     return 0;
 }
 
-entry_t *get_value(hashtable_t *ht, char *key)
+entry_t *ht_get_entry(hashtable_t *ht, char *key)
 {
     unsigned long hash;
     int index;
@@ -102,12 +103,14 @@ void delete_entry(hashtable_t *ht, char *key)
     index = hash % ht->size;
     curr = ht->values[index];
 
-    if (curr != NULL)
+    if (curr == NULL)
         return;
 
     if (strcmp(curr->key, key) == 0)
     {
         ht->values[index] = curr->next;
+        free(curr->key);
+        free(curr->value);
         free(curr);
         return;
     }
@@ -120,8 +123,38 @@ void delete_entry(hashtable_t *ht, char *key)
         {
             temp = curr->next;
             curr->next = temp->next;
+            free(temp->key);
+            free(temp->value);
             free(temp);
             return;
         }
     }
+}
+
+void clear_ht(hashtable_t *ht)
+{
+    if (ht == NULL)
+        return;
+
+    hashtable_t *ptr;
+    entry_t *curr;
+    size_t i;
+
+    ptr = ht;
+    for (i = 0; i < ht->size; ++i)
+    {
+        entry_t *temp;
+
+        curr = ht->values[i];
+        while (curr != NULL)
+        {
+            temp = curr;
+            curr = curr->next;
+            free(temp->key);
+            free(temp->value);
+            free(temp);
+        }
+    }
+
+    free(ht);
 }

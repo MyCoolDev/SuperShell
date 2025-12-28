@@ -4,10 +4,12 @@
 #include <string.h>
 #include "hashtable.c"
 #include "hashtable.h"
+#include "bin/buildin.c"
 
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 int main()
@@ -16,8 +18,10 @@ int main()
     char *argv[MAX_ARGVS];
     size_t argc;
     hashtable_t *commands;
+    entry_t *cmd_path;
 
-    commands = ht_create(100);
+    commands = ht_create(50);
+    load_path(commands);
 
     do
     {
@@ -43,11 +47,27 @@ int main()
         
         if (strncmp(cmd, "exit", 4) == 0)
             break;
+        if (strncmp(cmd, "echo", 4) == 0)
+            echo(argv, argc);
 
+        cmd_path = ht_get_entry(commands, cmd);
 
-        printf("%s: command not found!\n", cmd);
+        if (cmd_path != NULL)
+        {
+            pid_t pid = fork();
+
+            if (pid == 0)
+            {
+                execve(strdup(cmd_path->value), argv, NULL);
+                printf("%s: command not found!\n", cmd);
+                _exit(127);
+            }
+        }
+        else
+            printf("%s: command not found!\n", cmd);
     } while (TRUE);
     
+    clear_ht(commands);
     return 0;
 }
 
@@ -56,10 +76,10 @@ void load_path(hashtable_t *ht)
     char *path;
     char *token;
 
-    path = getenv("PATH");
+    path = strdup(getenv("PATH"));
     token = strtok(path, ":");
 
-    while (token != NULL)
+    while (token)
     {
         DIR *FD;
         struct dirent *inside_folder;
@@ -68,29 +88,43 @@ void load_path(hashtable_t *ht)
 
         if (FD == NULL)
         {
-            printf("Faild to open dir %s\n", token);
+            token = strtok(NULL, ":");
             continue;
         }
 
         while ((inside_folder = readdir(FD)))
         {
+            if (strcmp(inside_folder->d_name, ".") == 0 ||
+                strcmp(inside_folder->d_name, "..") == 0)
+                continue;
+
             struct stat buffer;
             int status;
+            size_t token_size = strlen(token);
+            size_t d_name_size = strlen(inside_folder->d_name);
+            char full_path[token_size + d_name_size + 2];
+            
+            snprintf(full_path, sizeof(full_path), "%s/%s", token, inside_folder->d_name);
 
-            status = stat(inside_folder->d_name, &buffer);
+            status = stat(full_path, &buffer);
             if (status == -1)
             {
-                fprintf(stderr, "Error: Failed to stat item - %s", strerror(errno));
+                fprintf(stderr, "Error: Failed to stat item (%s) - %s\n", full_path, strerror(errno));
                 continue;
             }
-            
-            char full_path[strlen(token) + strlen(inside_folder->d_name)];
+
+            printf("file: %s\n", inside_folder->d_name);
+
             if (S_ISREG(buffer.st_mode) && access(full_path, X_OK) == 0)
             {
-                /* exec the file using execve() */
+                ht_set(ht, inside_folder->d_name, strdup(full_path));
             }
         }
 
+        token = strtok(NULL, ":");
         closedir(FD);
+        
     }
+
+    free(path);
 }
