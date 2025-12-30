@@ -68,9 +68,18 @@ int main()
 
         if (cmd_s == 4 && strncmp(argv[0], "exit", cmd_s) == 0)
             break;
-        if (cmd_s == 4 && strncmp(cmd, "type", cmd_s) == 0)
+        else if (cmd_s == 3 && strncmp(argv[0], "pwd", 3) == 0)
+        {
+            printf("%s\n", pwd);
+            continue;
+        }
+        else if (cmd_s == 4 && strncmp(cmd, "type", cmd_s) == 0)
         {
             type(argv, argc, commands);
+            continue;
+        } else if (cmd_s == 2 && strncmp(cmd, "cd", cmd_s) == 0)
+        {
+            cd(argv, argc);
             continue;
         }
 
