@@ -8,18 +8,23 @@
 
 void type(char *argv[], size_t argc, hashtable_t *path_cmd)
 {
+    
     if (argc < 2)
         return;
 
     size_t i;
+    size_t cmd_len;
 
     for (i = 1; i < argc; ++i)
     {
-        if (strncmp(argv[i], "exit", 4) == 0 ||
-            strncmp(argv[i], "type", 4) == 0 ||
-            strncmp(argv[i], "cd", 2) == 0   ||
-            strncmp(argv[i], "pwd", 3) == 0)
-            printf("%s is a shell buildin", argv[i]);
+        cmd_len = strlen(argv[i]);
+        /* check if buildin */
+        if (cmd_len == 4 && strncmp(argv[i], "exit", 4) == 0 ||
+            cmd_len == 4 && strncmp(argv[i], "type", 4) == 0 ||
+            cmd_len == 2 && strncmp(argv[i], "cd", 2) == 0   ||
+            cmd_len == 3 && strncmp(argv[i], "pwd", 3) == 0  ||
+            cmd_len == 5 && strncmp(argv[i], "which", 5) == 0)
+            printf("%s: shell build-in command", argv[i]);
         else
         {
             entry_t *entry = ht_get_entry(path_cmd, argv[i]);
@@ -72,4 +77,41 @@ void cd(char *argv[], size_t argc)
         perror("Error updating env");
 
     free(cwd);
+}
+
+void which(char *argv[], size_t argc, hashtable_t *path_cmd)
+{
+    if (argc < 2)
+        return;
+
+    size_t i;
+    size_t cmd_len;
+
+    for (i = 1; i < argc; ++i)
+    {
+        cmd_len = strlen(argv[i]);
+
+        /* check if buildin */
+        if (cmd_len == 4 && strncmp(argv[i], "exit", 4) == 0 ||
+            cmd_len == 4 && strncmp(argv[i], "type", 4) == 0 ||
+            cmd_len == 2 && strncmp(argv[i], "cd", 2) == 0   ||
+            cmd_len == 3 && strncmp(argv[i], "pwd", 3) == 0  ||
+            cmd_len == 5 && strncmp(argv[i], "which", 5) == 0)
+            printf("%s: shell build-in command", argv[i]);
+        else
+        {
+            entry_t *entry = ht_get_entry(path_cmd, argv[i]);
+            if (entry == NULL)
+            {
+                printf("%s not found", argv[i]);
+                continue;
+            }
+
+            printf("%s", entry->value);
+        }
+        
+        if (i < argc - 1)
+            printf("\n");
+
+    }
 }

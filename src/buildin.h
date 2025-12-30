@@ -5,5 +5,6 @@
 
 void type(char *argv[], size_t argc, hashtable_t *path_cmd);
 void cd(char *argv[], size_t argc);
+void which(char *argv[], size_t argc, hashtable_t *path_cmd);
 
 #endif

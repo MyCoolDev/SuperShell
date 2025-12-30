@@ -81,6 +81,10 @@ int main()
         {
             cd(argv, argc);
             continue;
+        } else if (cmd_s == 5 && strncmp(cmd, "which", 5) == 0)
+        {
+            which(argv, argc, commands);
+            continue;
         }
 
         cmd_path = ht_get_entry(commands, cmd);
