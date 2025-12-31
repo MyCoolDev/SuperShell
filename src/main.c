@@ -1,5 +1,3 @@
-#include "main.h"
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +5,7 @@
 #include "hashtable.c"
 #include "hashtable.h"
 #include "buildin.c"
+#include "main.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
