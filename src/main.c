@@ -15,7 +15,8 @@
 
 int main()
 {
-    char *home;
+    char *cwd;
+    char *home_env;
     char *username;
     char *pwd;
     char host_name[HOST_NAME_MAX + 1];
@@ -37,14 +38,37 @@ int main()
 
     do
     {
+        int must_free_cwd = FALSE;
         username = getenv("USER");
         pwd = getenv("PWD");
-        home = replace_home_with_tilde(pwd);
+        home_env = getenv("HOME");
+
+        if (home_env == NULL)
+            cwd = pwd;
+        else
+        {
+
+            size_t home_len = strlen(home_env);
+
+            if (strncmp(pwd, home_env, home_len) != 0)
+                cwd = pwd;
+            else if (pwd[home_len] == '\0')
+                cwd = "~";
+            else if (pwd[home_len] != '/')
+                cwd = pwd;
+            else
+            {
+                cwd = replace_home_with_tilde(pwd, home_env);
+                must_free_cwd = TRUE;
+            }
+        }
         
-        printf("\n%s%s %s@%s at %s\n", TL, HB, username, host_name, home);
+        printf("\n%s%s %s@%s at %s\n", TL, HB, username, host_name, cwd);
         printf("%s%s> ", BL, HB);
         fflush(stdout);
-        free(home);
+
+        if (must_free_cwd == TRUE)
+            free(cwd);
 
         fgets(cmd, sizeof(cmd), stdin);
         cmd[strlen(cmd) - 1] = '\0';
@@ -164,29 +188,14 @@ void load_path(hashtable_t *ht)
     free(path);
 }
 
-char *replace_home_with_tilde(char *path)
+char *replace_home_with_tilde(char *path, char *home_env)
 {
-    char *home;
     size_t home_len;
     char *new_path;
     size_t new_path_len;
 
-    home = getenv("HOME");
-
-    if (home == NULL)
-        return path;
-
-    home_len = strlen(home);
-
-    if (strncmp(path, home, home_len) != 0)
-        return path;
-
-    if (path[home_len] == '\0')
-        return "~";
-
-    if (path[home_len] != '/')
-        return path;
-
+    home_len = strlen(home_env);
+    
     new_path_len = strlen(path + home_len);
     new_path = (char *)malloc(new_path_len + 2);
 

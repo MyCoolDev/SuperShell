@@ -12,6 +12,6 @@
 #define BL                      "╰"
 
 void load_path(hashtable_t *ht);
-char *replace_home_with_tilde(char *path);
+char *replace_home_with_tilde(char *path, char *home_env);
 
 #endif
