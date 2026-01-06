@@ -5,7 +5,7 @@
 #include "hashtable.c"
 #include "hashtable.h"
 #include "buildin.c"
-#include "main.h"
+#include "shell.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -37,7 +37,7 @@ int main()
 
     do
     {
-        int must_free_cwd = FALSE;
+        int must_free_cwd = false;
         username = getenv("USER");
         pwd = getenv("PWD");
         home_env = getenv("HOME");
@@ -58,7 +58,7 @@ int main()
             else
             {
                 cwd = replace_home_with_tilde(pwd, home_env);
-                must_free_cwd = TRUE;
+                must_free_cwd = true;
             }
         }
         
@@ -66,7 +66,7 @@ int main()
         printf("%s%s> ", BL, HB);
         fflush(stdout);
 
-        if (must_free_cwd == TRUE)
+        if (must_free_cwd == true)
             free(cwd);
 
         fgets(cmd, sizeof(cmd), stdin);
@@ -127,7 +127,7 @@ int main()
         }
         else
             printf("%s: command not found!", cmd);
-    } while (TRUE);
+    } while (true);
     
     clear_ht(commands);
     return 0;
